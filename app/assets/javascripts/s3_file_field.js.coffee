@@ -72,7 +72,7 @@ jQuery.fn.S3FileField = (options) ->
     formData: (form) ->
       unique_id = @files[0].unique_id
       finalFormData[unique_id] =
-        key: $this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id)
+        key: $this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id).replace(new RegExp('[\"\'\ \\\\+*?\\[\\^\\]$@#%&(){}=!<>|:\\-;,~`]', 'g'), '_'))
         'Content-Type': @files[0].type
         acl: $this.data('acl')
         'AWSAccessKeyId': $this.data('aws-access-key-id')
