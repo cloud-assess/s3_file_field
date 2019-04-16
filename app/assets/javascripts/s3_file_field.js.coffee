@@ -72,7 +72,7 @@ jQuery.fn.S3FileField = (options) ->
     formData: (form) ->
       unique_id = @files[0].unique_id
       finalFormData[unique_id] =
-        key: $this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id).replace('${filename}', @files[0].name)
+        key: $this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id).replace('${filename}', sanitizingFilename(@files[0].name))
         'Content-Type': @files[0].type
         acl: $this.data('acl')
         'AWSAccessKeyId': $this.data('aws-access-key-id')
@@ -91,6 +91,14 @@ jQuery.fn.S3FileField = (options) ->
     double_encode_quote = strip_before_slash.replace('"', '%22')
     encodeURIComponent(double_encode_quote)
 
+  sanitizingFilename = (filename) ->
+    ext = ".#{getExt(filename)}"
+    "#{filename.replace(ext, '').replace(/[^\w\s]/gi, '_')}#{ext}"
+
+  getExt = (filename) ->
+    idx = filename.lastIndexOf('.')
+    if idx < 1 then '' else filename.substr(idx + 1)
+
   build_content_object = (file, result) ->
 
     content = {}
@@ -103,7 +111,7 @@ jQuery.fn.S3FileField = (options) ->
       content.filepath   = finalFormData[file.unique_id]['key'].replace('/${filename}', '')
       content.url        = domain + '/' + content.filepath + '/' + to_s3_filename(file.name)
 
-    content.filename   = file.name
+    content.filename   = sanitizingFilename(file.name)
     content.filesize   = file.size if 'size' of file
     content.filetype   = file.type if 'type' of file
     content.unique_id  = file.unique_id if 'unique_id' of file
