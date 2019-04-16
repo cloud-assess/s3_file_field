@@ -72,7 +72,7 @@ jQuery.fn.S3FileField = (options) ->
     formData: (form) ->
       unique_id = @files[0].unique_id
       finalFormData[unique_id] =
-        key: $this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id).replace('${filename}', @files[0].name)
+        key: $this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id).replace('${filename}', @files[0].name.replace(/[^a-z0-9_-]/gi, '_') + '.' + @files[0].name.split('.').pop())
         'Content-Type': @files[0].type
         acl: $this.data('acl')
         'AWSAccessKeyId': $this.data('aws-access-key-id')
@@ -80,6 +80,8 @@ jQuery.fn.S3FileField = (options) ->
         signature: $this.data('signature')
         success_action_status: "201"
         'X-Requested-With': 'xhr'
+
+      console.log($this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id).replace('${filename}', @files[0].name))
 
       getFormData(finalFormData[unique_id]).concat(getFormData(extraFormData))
 
