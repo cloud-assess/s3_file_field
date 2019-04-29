@@ -60,7 +60,6 @@ jQuery.fn.S3FileField = (options) ->
 
     add: (e, data) ->
       data.files[0].unique_id = Math.random().toString(36).substr(2,16)
-      console.log(sanitizingFilename(data.files[0].name))
       if add? then add(e, data) else data.submit()
 
     done: (e, data) ->
