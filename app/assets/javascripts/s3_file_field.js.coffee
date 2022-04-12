@@ -97,7 +97,13 @@ jQuery.fn.S3FileField = (options) ->
 
   getExt = (filename) ->
     idx = filename.lastIndexOf('.')
-    if idx < 1 then '' else filename.substr(idx + 1)
+    if idx < 1 then '' else mapExt(filename.substr(idx + 1))
+
+  mapExt = (extension) ->
+    # for now just map audio and video and leave the remaining extensions as they are.
+    return 'mp4' if extension in ["3g2", "3gp", "3gp2", "3gpp", "asf", "asr", "asx", "avi", "dif", "dv", "flv", "IVF", "lsf", "lsx", "m1v", "m2t", "m2ts", "m2v", "m4v", "mod", "mov", "movie", "mp2", "mp2v", "mp4", "mp4v", "mpa", "mpe", "mpeg", "mpg", "mpv2", "mqv", "mts", "nsc", "qt", "ts", "tts", "vbk", "wm", "wmp", "wmv", "wmx", "wvx"]
+    return 'mp3' if extension in ["aa", "AAC", "aax", "ac3", "ADT", "ADTS", "aif", "aifc", "aiff", "au", "caf", "cdda", "gsm", "m3u", "m3u8", "m4a", "m4b", "m4p", "m4r", "mid", "midi", "mp3", "pls", "ra", "ram", "rmi", "rpm", "sd2", "smd", "smx", "smz", "snd", "wav", "wave", "wax", "wma"]
+    extension
 
   build_content_object = (file, result) ->
 
