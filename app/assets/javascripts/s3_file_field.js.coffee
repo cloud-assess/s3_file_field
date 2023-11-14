@@ -80,6 +80,10 @@ jQuery.fn.S3FileField = (options) ->
         signature: $this.data('signature')
         success_action_status: "201"
         'X-Requested-With': 'xhr'
+        'X-Amz-Algorithm': $this.data('amzalgorithm')
+        'X-Amz-Credential': $this.data('amzcredential')
+        'X-Amz-Date': $this.data('amzdate')
+        'X-Amz-Signature': $this.data('amzsignature')
 
       getFormData(finalFormData[unique_id]).concat(getFormData(extraFormData))
 
