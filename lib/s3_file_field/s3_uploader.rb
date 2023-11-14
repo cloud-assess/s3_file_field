@@ -33,7 +33,7 @@ module S3FileField
         if @options[:region] == "us-east-1"
           "#{@options[:bucket]}.s3.amazonaws.com"
         else
-          "#{@options[:bucket]}.s3-#{@options[:region]}.amazonaws.com"
+          "#{@options[:bucket]}.s3.#{@options[:region]}.amazonaws.com"
         end
       end
 
