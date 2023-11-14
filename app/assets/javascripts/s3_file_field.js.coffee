@@ -75,11 +75,13 @@ jQuery.fn.S3FileField = (options) ->
         key: $this.data('key').replace('{timestamp}', new Date().getTime()).replace('{unique_id}', unique_id).replace('${filename}', sanitizingFilename(@files[0].name))
         'Content-Type': @files[0].type
         acl: $this.data('acl')
-        'AWSAccessKeyId': $this.data('aws-access-key-id')
         policy: $this.data('policy')
-        signature: $this.data('signature')
         success_action_status: "201"
         'X-Requested-With': 'xhr'
+        'X-Amz-Algorithm': $this.data('amzalgorithm')
+        'X-Amz-Credential': $this.data('amzcredential')
+        'X-Amz-Date': $this.data('amzdate')
+        'X-Amz-Signature': $this.data('amzsignature')
 
       getFormData(finalFormData[unique_id]).concat(getFormData(extraFormData))
 
