@@ -13,9 +13,11 @@ module S3FileField
         max_file_size: 2000.megabytes,
         conditions: [],
         key_starts_with: S3FileField.config.key_starts_with || 'uploads/',
-        region: S3FileField.config.region || 's3',
+        region: S3FileField.config.region || 'us-east-1',
         url: S3FileField.config.url,
-        ssl: S3FileField.config.ssl
+        ssl: S3FileField.config.ssl,
+        date: Time.now.utc.strftime("%Y%m%d"),
+        timestamp: Time.now.utc.strftime("%Y%m%dT%H%M%SZ")
       }
 
       @key = original_options[:key]
@@ -26,6 +28,14 @@ module S3FileField
         reject { |k, v| v.nil? }
 
       @options = default_options.merge(extracted_options)
+
+      def hostname
+        if @options[:region] == "us-east-1"
+          "#{@options[:bucket]}.s3.amazonaws.com"
+        else
+          "#{@options[:bucket]}.s3-#{@options[:region]}.amazonaws.com"
+        end
+      end
 
       unless @options[:access_key_id]
         raise Error.new("Please configure access_key_id option.")
@@ -46,12 +56,14 @@ module S3FileField
 
     def field_data_options
       {
-        url: url,
-        key: key,
-        acl: @options[:acl],
-        aws_access_key_id: @options[:access_key_id],
-        policy: policy,
-        signature: signature
+        :url => @options[:url] || url,
+        :key => @options[:key] || key,
+        :acl => @options[:acl],
+        :policy => policy,
+        :amzAlgorithm => 'AWS4-HMAC-SHA256',
+        :amzCredential => "#{@options[:access_key_id]}/#{@options[:date]}/#{@options[:region]}/s3/aws4_request",
+        :amzDate => @options[:timestamp],
+        :amzSignature => signature,
       }.merge(@original_options[:data] || {})
     end
 
@@ -62,15 +74,7 @@ module S3FileField
     end
 
     def url
-      @url ||=
-        if @options[:url]
-          @options[:url]
-        else
-          protocol = @options[:ssl] == true ? "https" : @options[:ssl] == false ? "http" : nil
-          subdomain = "#{@options[:bucket]}.#{@options[:region]}"
-          domain = "//#{subdomain}.amazonaws.com/"
-          [protocol, domain].compact.join(":")
-        end
+      @options[:url] || "http#{@options[:ssl] ? 's' : ''}://#{hostname}/"
     end
 
     def policy
@@ -87,18 +91,27 @@ module S3FileField
           ["starts-with","$Content-Type",""],
           {bucket: @options[:bucket]},
           {acl: @options[:acl]},
-          {success_action_status: "201"}
+          {success_action_status: "201"},
+          {'X-Amz-Algorithm' => 'AWS4-HMAC-SHA256'},
+          {'X-Amz-Credential' => "#{@options[:access_key_id]}/#{@options[:date]}/#{@options[:region]}/s3/aws4_request"},
+          {'X-Amz-Date' => @options[:timestamp]}
         ] + @options[:conditions]
       }
     end
 
+    def signing_key
+      #AWS Signature Version 4
+
+      kDate    = OpenSSL::HMAC.digest('sha256', "AWS4" + @options[:secret_access_key], @options[:date])
+      kRegion  = OpenSSL::HMAC.digest('sha256', kDate, @options[:region])
+      kService = OpenSSL::HMAC.digest('sha256', kRegion, 's3')
+      kSigning = OpenSSL::HMAC.digest('sha256', kService, "aws4_request")
+
+      kSigning
+    end
+
     def signature
-      Base64.encode64(
-        OpenSSL::HMAC.digest(
-          OpenSSL::Digest.new('sha1'),
-          @options[:secret_access_key], policy
-        )
-      ).gsub("\n", '')
+      OpenSSL::HMAC.hexdigest('sha256', signing_key, policy)
     end
   end
 end
