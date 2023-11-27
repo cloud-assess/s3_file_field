@@ -10,7 +10,7 @@ module S3FileField
         bucket: S3FileField.config.bucket,
         acl: "public-read",
         expiration: 10.hours.from_now.utc.iso8601,
-        max_file_size: 2000.megabytes,
+        max_file_size: max_file_size,
         conditions: [],
         key_starts_with: S3FileField.config.key_starts_with || 'uploads/',
         region: S3FileField.config.region || 'us-east-1',
@@ -59,6 +59,7 @@ module S3FileField
         :url => @options[:url] || url,
         :key => @options[:key] || key,
         :acl => @options[:acl],
+        :max_file_size => @options[:max_file_size] || max_file_size,
         :policy => policy,
         :amzAlgorithm => 'AWS4-HMAC-SHA256',
         :amzCredential => "#{@options[:access_key_id]}/#{@options[:date]}/#{@options[:region]}/s3/aws4_request",
@@ -112,6 +113,10 @@ module S3FileField
 
     def signature
       OpenSSL::HMAC.hexdigest('sha256', signing_key, policy)
+    end
+
+    def max_file_size
+      1024.megabytes
     end
   end
 end
